@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Mobile Shop</title>
+<style>
+  :root{
+    --bg:#0a0a1a; --card:#13132a; --border:#23233f;
+    --purple:#7c5cff; --green:#4ade80; --red:#ff5c7a; --orange:#ffa24c; --muted:#8e8ead;
+    --text:#f2f2fa;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#05050f;color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  button,input,select{font:inherit;color:inherit}
+
+  #app{position:relative;max-width:460px;height:100dvh;margin:0 auto;background:var(--bg);
+    display:flex;flex-direction:column;overflow:hidden;
+    border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+  /* top bar */
+  .top{display:flex;align-items:center;gap:8px;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .top .date{color:var(--muted);font-size:14px}
+  .top .sp{flex:1}
+  .top .shop{font-weight:600;cursor:pointer;font-size:15px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pro{display:flex;align-items:center;gap:2px;background:#8a6a3b;border-radius:12px;padding:4px 10px;font-size:12px}
+  svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  /* view */
+  #view{flex:1;overflow-y:auto;padding:20px 20px 120px}
+  h2{font-size:20px;font-weight:600;margin:0 0 12px}
+  h3{font-size:18px;font-weight:600;margin:24px 0 10px}
+
+  /* nav */
+  .nav{display:flex;justify-content:space-evenly;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));
+    background:var(--bg);border-top:1px solid var(--border)}
+  .nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted);font-size:11px;cursor:pointer}
+  .nav .ic{width:52px;height:46px;border-radius:14px;background:var(--card);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;transition:background .2s}
+  .nav button.on{color:#fff}
+  .nav button.on .ic{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 4px 0 #5a3fd6}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .stat .l{color:var(--muted);font-size:13px}
+  .stat .v{font-size:22px;font-weight:600;margin-top:10px;white-space:nowrap}
+  .empty{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;color:var(--muted)}
+
+  /* gauge */
+  .gauge{position:relative;width:260px;height:200px;margin:0 auto 10px}
+  .gauge svg{position:absolute;inset:0}
+  .gauge .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:40px}
+  .gauge .big{font-size:30px;font-weight:700}
+  .gauge .sub{color:var(--muted);font-size:13px;margin-top:4px}
+
+  /* tiles */
+  .tile{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+    border-radius:16px;padding:14px;margin-bottom:10px}
+  .tile .grow{flex:1;min-width:0}
+  .tile .n{font-weight:600}
+  .tile .m{color:var(--muted);font-size:12px;margin-top:4px}
+  .tile .r{text-align:right;white-space:nowrap}
+  .tile .r b{font-weight:600}
+  .tile .r small{display:block;font-size:12px;margin-top:2px}
+  .g{color:var(--green)} .rd{color:var(--red)} .o{color:var(--orange)}
+  .tile.low{border-color:rgba(255,92,122,.6)}
+  .tile.ud{border-color:rgba(255,162,76,.5)}
+  .tile.click{cursor:pointer}
+  .iconbtn{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px}
+
+  /* forms */
+  label.f{display:block;margin-bottom:12px}
+  label.f span{display:block;color:var(--muted);font-size:13px;margin:0 0 6px 2px}
+  input[type=text],input[type=number],input[type=search],select{
+    width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px;outline:none;font-size:16px}
+  input:focus,select:focus{border-color:var(--purple)}
+  select option{background:var(--card)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sw{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px;cursor:pointer}
+  .sw input{display:none}
+  .sw i{width:46px;height:26px;border-radius:13px;background:#2a2a48;position:relative;transition:.2s;flex:none;margin-left:12px}
+  .sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+  .sw input:checked + i{background:var(--purple)}
+  .sw input:checked + i::after{left:23px}
+  .btn{width:100%;height:52px;border:0;border-radius:14px;background:var(--purple);color:#fff;
+    font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 4px 0 #5a3fd6}
+  .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #5a3fd6}
+  .btn.sm{width:auto;height:36px;padding:0 14px;font-size:14px;box-shadow:none;border-radius:12px}
+  .btn.red{background:var(--red);box-shadow:none}
+  .btn.ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--text)}
+
+  .chips{display:flex;gap:8px;margin-bottom:16px}
+  .chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 18px;cursor:pointer}
+  .chip.on{background:var(--purple);border-color:var(--purple)}
+  .sumrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .sumrow .l{color:var(--muted)} .sumrow .v{font-size:20px;font-weight:700}
+
+  .head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+  .head .s{color:var(--muted);font-size:13px}
+  .search{position:relative;margin-bottom:14px}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+  .search input{padding-left:44px}
+
+  .fab{position:absolute;right:16px;bottom:100px;display:none;align-items:center;gap:6px;
+    background:var(--purple);color:#fff;border:0;border-radius:16px;padding:14px 18px;font-weight:600;
+    box-shadow:0 6px 18px rgba(124,92,255,.45);cursor:pointer}
+
+  /* modal + toast */
+  #modal{position:absolute;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+  #modal.on{display:flex}
+  .sheet{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;width:100%;max-height:90%;overflow:auto}
+  .sheet h4{margin:0 0 14px;font-size:19px}
+  .sheet p{color:var(--muted);margin:0 0 16px}
+  .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+  #toast{position:absolute;left:16px;right:16px;bottom:96px;padding:14px 16px;border-radius:14px;color:#fff;
+    background:var(--purple);opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;z-index:30;text-align:center}
+  #toast.on{opacity:1;transform:none}
+  #toast.err{background:var(--red)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <svg class="i" style="color:var(--orange)" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+    <span class="date" id="today"></span>
+    <span class="sp"></span>
+    <span class="shop" id="shopName" onclick="renameShop()" title="Naam badalne ke liye dabayein"></span>
+    <span class="pro"><svg class="i" style="width:14px;height:14px" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>Pro</span>
+  </div>
+
+  <div id="view"></div>
+
+  <button class="fab" id="fab" onclick="productDialog()">
+    <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Naya item
+  </button>
+
+  <div class="nav">
+    <button data-t="home" onclick="setTab('home')"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span>Home</button>
+    <button data-t="sale" onclick="setTab('sale')"><span class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H6"/></svg></span>Sale</button>
+    <button data-t="stock" onclick="setTab('stock')"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>Stock</button>
+    <button data-t="report" onclick="setTab('report')"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M5 21V11M12 21V4M19 21v-7"/></svg></span>Report</button>
+  </div>
+
+  <div id="modal"></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+/* ============================================================
+   SETTINGS (apni marzi se badlein)
+   ============================================================ */
+const DAILY_TARGET = 50000;   // rozana sale ka target (Rs)
+const LOW_STOCK    = 5;       // is se kam stock par "kam" dikhega
+
+/* ============================================================
+   DATA (browser ke andar localStorage mein save hota hai)
+   ============================================================ */
+function load(k, def){ try{ const v = JSON.parse(localStorage.getItem(k)); return v ?? def; }catch(e){ return def; } }
+let products = load('shop_products', []);
+let sales    = load('shop_sales', []);       // newest first
+let shopName = load('shop_name', 'My Mobile Shop');
+function persist(){
+  try{
+    localStorage.setItem('shop_products', JSON.stringify(products));
+    localStorage.setItem('shop_sales', JSON.stringify(sales));
+    localStorage.setItem('shop_name', JSON.stringify(shopName));
+  }catch(e){ toast('Data save nahi ho saka (browser storage band hai)', true); }
+}
+const uid = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const rs = n => 'Rs ' + Math.round(n).toLocaleString('en-US');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const startOfToday = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const fmtDate = d => new Date(d).toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
+const fmtDateTime = d => fmtDate(d) + ', ' + new Date(d).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+const total  = s => s.qty * s.sell;
+const profit = s => s.qty * (s.sell - s.buy);
+const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
+const salesFrom = d => sales.filter(s => new Date(s.date) >= d);
+
+let toastTimer;
+function toast(msg, err){
+  const t = $('#toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = '', 2600);
+}
+function modal(html){ const m = $('#modal'); m.innerHTML = '<div class="sheet">' + html + '</div>'; m.classList.add('on'); }
+function closeModal(){ const m = $('#modal'); m.classList.remove('on'); m.innerHTML = ''; }
+let confirmCb = null;
+function askConfirm(title, msg, cb){
+  confirmCb = cb;
+  modal(`<h4>${esc(title)}</h4><p>${esc(msg)}</p>
+    <div class="acts"><button class="btn sm ghost" onclick="closeModal()">Nahi</button>
+    <button class="btn sm red" onclick="const f=confirmCb; closeModal(); f&&f();">Haan, delete</button></div>`);
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+let tab = 'home', period = 0, selectedId = null;
+let draft = {qty:'1', price:'', cust:'', udhaar:false};
+let searchQ = '';
+
+function setTab(t){ tab = t; render(); $('#view').scrollTop = 0; }
+function renameShop(){
+  const n = prompt('Dukaan ka naam likhein:', shopName);
+  if(n && n.trim()){ shopName = n.trim(); persist(); render(); }
+}
+
+function render(){
+  $('#today').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+  $('#shopName').textContent = shopName;
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  $('#fab').style.display = tab === 'stock' ? 'flex' : 'none';
+  $('#view').innerHTML = ({home:homeView, sale:saleView, stock:stockView, report:reportView})[tab]();
+  if(tab === 'stock') drawStock();
+}
+
+/* ============================================================
+   HOME  (gauge + overview)
+   ============================================================ */
+function arcPath(p){
+  const cx = 130, cy = 115, r = 100, a0 = Math.PI * 0.8, sweep = Math.PI * 1.4 * p;
+  const a1 = a0 + sweep;
+  const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${sweep > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+function homeView(){
+  const today = salesFrom(startOfToday());
+  const t = sum(today, total), pf = sum(today, profit), items = sum(today, s => s.qty);
+  const ud = sum(sales.filter(s => !s.paid), total);
+  const low = products.filter(p => p.stock <= LOW_STOCK).length;
+  const prog = Math.min(1, t / DAILY_TARGET);
+
+  const stat = (l, v, c) => `<div class="card stat"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`;
+  return `
+    <h2>Aaj ki sale</h2>
+    <div class="gauge">
+      <svg viewBox="0 0 260 200">
+        <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4ade80"/><stop offset="1" stop-color="#86efac"/></linearGradient></defs>
+        <path d="${arcPath(1)}" fill="none" stroke="#24243f" stroke-width="14" stroke-linecap="round"/>
+        ${prog > 0 ? `<path d="${arcPath(prog)}" fill="none" stroke="url(#gg)" stroke-width="14" stroke-linecap="round"/>` : ''}
+      </svg>
+      <div class="mid">
+        <div class="big">${rs(t)}</div>
+        <div class="sub">${prog >= 1 ? 'Target pura! Zabardast' : 'Target: ' + rs(DAILY_TARGET)}</div>
+      </div>
+    </div>
+    <h2 style="margin-top:6px">Overview</h2>
+    <div class="grid2" style="margin-top:14px">${stat('Aaj ka profit', rs(pf), 'g')}${stat('Items biky', items)}</div>
+    <div class="grid2">${stat('Udhaar baqi', rs(ud), 'o')}${stat('Low stock', low, low ? 'rd' : '')}</div>
+    <h3>Aakhri sales</h3>
+    ${today.length ? today.slice(0, 5).map(s => saleTile(s, false)).join('') : '<div class="empty">Aaj abhi koi sale nahi hui. "Sale" tab se pehli sale likhein.</div>'}
+  `;
+}
+
+function saleTile(s, deletable){
+  return `<div class="tile">
+    <div class="grow">
+      <div class="n">${esc(s.name)} &nbsp;x${s.qty}</div>
+      <div class="m">${fmtDateTime(s.date)}${s.customer ? ' &nbsp;-&nbsp; ' + esc(s.customer) : ''}</div>
+      ${s.paid ? '' : '<div class="m o">Udhaar baqi</div>'}
+    </div>
+    <div class="r"><b>${rs(total(s))}</b><small class="${profit(s) >= 0 ? 'g' : 'rd'}">profit ${rs(profit(s))}</small></div>
+    ${deletable ? `<button class="iconbtn" onclick="delSale(${s.id})" aria-label="Delete"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg></button>` : ''}
+  </div>`;
+}
+
+/* ============================================================
+   SALE
+   ============================================================ */
+function saleView(){
+  const form = products.length ? `
+    <label class="f"><span>Item</span>
+      <select id="f_item" onchange="pickItem(this.value)">
+        <option value="" ${selectedId ? '' : 'selected'} disabled>Item select karein</option>
+        ${products.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${esc(p.name)} (stock: ${p.stock})</option>`).join('')}
+      </select></label>
+    <div class="row2">
+      <label class="f"><span>Quantity</span><input id="f_qty" type="number" inputmode="numeric" min="1" value="${esc(draft.qty)}" oninput="draft.qty=this.value"></label>
+      <label class="f"><span>Sale price (Rs)</span><input id="f_price" type="number" inputmode="decimal" value="${esc(draft.price)}" oninput="draft.price=this.value"></label>
+    </div>
+    <label class="f"><span>Customer ka naam (optional)</span><input id="f_cust" type="text" value="${esc(draft.cust)}" oninput="draft.cust=this.value"></label>
+    <label class="sw"><span>Udhaar (paise baad mein milenge)</span>
+      <input type="checkbox" ${draft.udhaar ? 'checked' : ''} onchange="draft.udhaar=this.checked"><i></i></label>
+    <button class="btn" onclick="saveSale()">Sale save karo</button>`
+    : '<div class="empty">Pehle "Stock" tab mein items add karein.</div>';
+
+  return `<h2>Nayi sale</h2>${form}
+    <h3>Sale history</h3>
+    ${sales.length ? sales.slice(0, 50).map(s => saleTile(s, true)).join('') : '<div class="empty">Abhi tak koi sale record nahi.</div>'}`;
+}
+
+function pickItem(id){
+  selectedId = +id;
+  const p = products.find(x => x.id === selectedId);
+  draft.price = p ? String(p.sell) : '';
+  $('#f_price').value = draft.price;
+}
+
+function saveSale(){
+  const p = products.find(x => x.id === selectedId);
+  const qty = parseInt(draft.qty, 10) || 0;
+  const price = parseFloat(draft.price) || 0;
+  if(!p) return toast('Pehle item select karein', true);
+  if(qty <= 0) return toast('Quantity 1 ya us se zyada likhein', true);
+  if(price <= 0) return toast('Sale price likhein', true);
+  if(qty > p.stock) return toast('Stock sirf ' + p.stock + ' bacha hai', true);
+  if(draft.udhaar && !draft.cust.trim()) return toast('Udhaar ke liye customer ka naam likhein', true);
+
+  p.stock -= qty;
+  sales.unshift({id: uid(), productId: p.id, name: p.name, qty, buy: p.buy, sell: price,
+    customer: draft.cust.trim(), paid: !draft.udhaar, date: new Date().toISOString()});
+  persist();
+  draft.qty = '1'; draft.cust = ''; draft.udhaar = false;
+  render();
+  toast('Sale save ho gayi: ' + rs(qty * price));
+}
+
+function delSale(id){
+  const s = sales.find(x => x.id === id); if(!s) return;
+  askConfirm('Ye sale delete karein?', 'Item ka stock wapis add ho jayega.', () => {
+    const p = products.find(x => x.id === s.productId);
+    if(p) p.stock += s.qty;
+    sales = sales.filter(x => x.id !== id);
+    persist(); render();
+  });
+}
+
+/* ============================================================
+   STOCK
+   ============================================================ */
+function stockView(){
+  const val = sum(products, p => p.buy * p.stock);
+  return `
+    <div class="head"><h2 style="margin:0">Stock</h2><span class="s">Maal ki value: ${rs(val)}</span></div>
+    <div class="search">
+      <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="q" placeholder="Item ya category search karein" value="${esc(searchQ)}" oninput="searchQ=this.value;drawStock()">
+    </div>
+    <div id="stockList"></div>`;
+}
+
+function drawStock(){
+  const q = searchQ.toLowerCase();
+  const list = products.filter(p => p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  $('#stockList').innerHTML = list.length ? list.map(p => {
+    const low = p.stock <= LOW_STOCK;
+    return `<div class="tile click ${low ? 'low' : ''}" onclick="productDialog(${p.id})">
+      <div class="grow"><div class="n">${esc(p.name)}</div>
+        <div class="m">${esc(p.category || 'General')} &nbsp;-&nbsp; Kharid ${rs(p.buy)}</div></div>
+      <div class="r"><b>${rs(p.sell)}</b><small class="${low ? 'rd' : 'g'}">${low ? 'Stock: ' + p.stock + ' (kam)' : 'Stock: ' + p.stock}</small></div>
+    </div>`;
+  }).join('') : '<div class="empty">Koi item nahi mila. Neeche "Naya item" dabayein.</div>';
+}
+
+function productDialog(id){
+  const p = id ? products.find(x => x.id === id) : null;
+  modal(`<h4>${p ? 'Item edit karein' : 'Naya item'}</h4>
+    <label class="f"><span>Item ka naam</span><input type="text" id="p_name" value="${esc(p?.name)}"></label>
+    <label class="f"><span>Category (mobile, cover, charger...)</span><input type="text" id="p_cat" value="${esc(p?.category)}"></label>
+    <div class="row2">
+      <label class="f"><span>Kharid price</span><input type="number" inputmode="decimal" id="p_buy" value="${p ? p.buy : ''}"></label>
+      <label class="f"><span>Sale price</span><input type="number" inputmode="decimal" id="p_sell" value="${p ? p.sell : ''}"></label>
+    </div>
+    <label class="f"><span>Stock (quantity)</span><input type="number" inputmode="numeric" id="p_stock" value="${p ? p.stock : ''}"></label>
+    <div class="acts">
+      ${p ? `<button class="btn sm ghost rd" onclick="delProduct(${p.id})">Delete</button>` : ''}
+      <button class="btn sm ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn sm" onclick="saveProduct(${p ? p.id : 0})">Save</button>
+    </div>`);
+}
+
+function saveProduct(id){
+  const name = $('#p_name').value.trim();
+  if(!name) return toast('Item ka naam likhein', true);
+  const data = {
+    name, category: $('#p_cat').value.trim(),
+    buy: parseFloat($('#p_buy').value) || 0,
+    sell: parseFloat($('#p_sell').value) || 0,
+    stock: parseInt($('#p_stock').value, 10) || 0
+  };
+  if(id){ Object.assign(products.find(x => x.id === id), data); }
+  else { products.push({id: uid(), ...data}); }
+  persist(); closeModal(); render();
+}
+
+function delProduct(id){
+  askConfirm('Item delete karein?', 'Purani sales record mein rahengi.', () => {
+    products = products.filter(x => x.id !== id);
+    if(selectedId === id) selectedId = null;
+    persist(); render();
+  });
+}
+
+/* ============================================================
+   REPORT
+   ============================================================ */
+function periodStart(){
+  const t = startOfToday();
+  if(period === 0) return t;
+  if(period === 1) return new Date(t.getFullYear(), t.getMonth(), t.getDate() - 6);
+  return new Date(t.getFullYear(), t.getMonth(), 1);
+}
+function setPeriod(i){ period = i; render(); }
+
+function reportView(){
+  const list = salesFrom(periodStart());
+  const t = sum(list, total), pf = sum(list, profit), qty = sum(list, s => s.qty);
+  const by = {};
+  list.forEach(s => by[s.name] = (by[s.name] || 0) + s.qty);
+  const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const unpaid = sales.filter(s => !s.paid);
+  const row = (l, v, c) => `<div class="card sumrow"><span class="l">${l}</span><span class="v ${c||''}">${v}</span></div>`;
+
+  return `
+    <h2>Reports</h2>
+    <div class="chips">${['Aaj','Hafta','Mahina'].map((n, i) => `<div class="chip ${period === i ? 'on' : ''}" onclick="setPeriod(${i})">${n}</div>`).join('')}</div>
+    ${row('Total sale', rs(t))}${row('Profit', rs(pf), 'g')}${row('Items biky', qty)}
+
+    <h3>Sab se zyada bikne wale</h3>
+    ${top.length ? top.map(([n, q]) => `<div class="tile"><div class="grow">${esc(n)}</div><div class="m" style="margin:0">${q} piece</div></div>`).join('')
+      : '<div class="empty">Is muddat mein koi sale nahi.</div>'}
+
+    <h3>Udhaar list</h3>
+    ${unpaid.length ? unpaid.map(s => `<div class="tile ud">
+        <div class="grow"><div class="n">${esc(s.customer)}</div><div class="m">${esc(s.name)} x${s.qty} - ${fmtDate(s.date)}</div></div>
+        <b class="o">${rs(total(s))}</b>
+        <button class="btn sm" onclick="markPaid(${s.id})">Wasool</button></div>`).join('')
+      : '<div class="empty">Koi udhaar baqi nahi.</div>'}
+
+    <h3>Backup</h3>
+    <div class="empty" style="margin-bottom:10px">Data sirf is browser mein save hai. Browser ka data clear karne se pehle backup zaroor download karein.</div>
+    <div class="row2">
+      <button class="btn sm ghost" style="width:100%;height:46px" onclick="exportData()">Backup download</button>
+      <button class="btn sm ghost" style="width:100%;height:46px" onclick="$('#imp').click()">Backup restore</button>
+    </div>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(this.files[0])">`;
+}
+
+function markPaid(id){
+  const s = sales.find(x => x.id === id);
+  if(s){ s.paid = true; persist(); render(); toast('Udhaar wasool ho gaya'); }
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify({products, sales, shopName}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shop-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function importData(file){
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if(!Array.isArray(d.products) || !Array.isArray(d.sales)) throw new Error();
+      askConfirm('Backup restore karein?', 'Maujooda data is backup se badal jayega.', () => {
+        products = d.products; sales = d.sales; shopName = d.shopName || shopName;
+        persist(); render(); toast('Backup restore ho gaya');
+      });
+    }catch(e){ toast('Ye backup file theek nahi hai', true); }
+  };
+  r.readAsText(file);
+}
+
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
+render();
+</script>
+</body>
+</html>
